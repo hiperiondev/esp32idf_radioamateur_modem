@@ -107,12 +107,12 @@ All four are demodulated and modulated entirely in software from raw ADC/DAC sam
                          │  application callback (raw AX.25 frame)     │
                          └─────────────────────────────────────────────┘
 
-   Application            ┌─────────────────────────────────────────────┐
-   modem_send_raw() ────► │  Ax25WriteTxFrame() / Ax25TransmitBuffer()  │
-                          │  HDLC framing, bit stuffing, FCS append,    │
-                          │  optional FX.25 RS encode                   │
-                          └──────────────┬──────────────────────────────┘
-                                         ▼  Ax25GetTxBit()
+   Application           ┌─────────────────────────────────────────────┐
+   modem_send_raw() ───► │  Ax25WriteTxFrame() / Ax25TransmitBuffer()  │
+                         │  HDLC framing, bit stuffing, FCS append,    │
+                         │  optional FX.25 RS encode                   │
+                         └──────────────┬──────────────────────────────┘
+                                        ▼  Ax25GetTxBit()
                          ┌─────────────────────────────────────────────┐
                          │  MODEM_BAUDRATE_TIMER_HANDLER() (modem.c)   │
                          │   • DDS tone synthesis (512-entry sine LUT) │
