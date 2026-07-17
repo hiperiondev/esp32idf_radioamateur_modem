@@ -71,58 +71,58 @@ All four are demodulated and modulated entirely in software from raw ADC/DAC sam
 ### Signal path overview
 
 ```
-                         ┌────────────────────────────────────────────┐
+                         ┌─────────────────────────────────────────────┐
    Radio audio  ──────►  │  ADC1 (continuous/DMA mode, free-running)   │
    (RX, GPIO35* )        │  76 800 Hz raw sample stream                │
-                         └───────────────┬──────────────────────────────┘
+                         └───────────────┬─────────────────────────────┘
                                          │ ISR just counts samples
                                          ▼
-                         ┌────────────────────────────────────────────┐
+                         ┌─────────────────────────────────────────────┐
                          │  afsk_rx_task  (task context, core 0)       │
                          │   • adc_ingest(): un-swap DMA sample pairs  │
                          │   • RX ring buffer (FIFO)                   │
                          │   • AFSK_Poll(): DC tracker, AGC, decimate  │
                          │     76 800 Hz → 9 600 Hz (AFSK) or raw      │
                          │     (G3RUH)                                 │
-                         └───────────────┬──────────────────────────────┘
+                         └───────────────┬─────────────────────────────┘
                                          ▼
-                         ┌────────────────────────────────────────────┐
-                         │  MODEM_DECODE()  (modem.c)                  │
-                         │   • boxcar matched-filter correlator +      │
-                         │     quadrature NCO (AFSK profiles), OR      │
-                         │     baseband slicer (G3RUH)                 │
-                         │   • DPLL bit/symbol synchronizer            │
-                         │   • DCD (data carrier detect) state machine │
+                         ┌──────────────────────────────────────────────┐
+                         │  MODEM_DECODE()  (modem.c)                   │
+                         │   • boxcar matched-filter correlator +       │
+                         │     quadrature NCO (AFSK profiles), OR       │
+                         │     baseband slicer (G3RUH)                  │
+                         │   • DPLL bit/symbol synchronizer             │
+                         │   • DCD (data carrier detect) state machine  │
                          └───────────────┬──────────────────────────────┘
                                          ▼  one bit at a time
-                         ┌────────────────────────────────────────────┐
+                         ┌─────────────────────────────────────────────┐
                          │  Ax25BitParse()  (ax25.c)                   │
                          │   • HDLC flag/bit-stuffing state machine    │
                          │   • CRC-CCITT FCS check                     │
                          │   • optional FX.25 Reed–Solomon decode      │
-                         └───────────────┬──────────────────────────────┘
+                         └───────────────┬─────────────────────────────┘
                                          ▼
-                         ┌────────────────────────────────────────────┐
+                         ┌─────────────────────────────────────────────┐
                          │  frame_q  (FreeRTOS queue) → modem_rx_cb_t  │
                          │  application callback (raw AX.25 frame)     │
-                         └────────────────────────────────────────────┘
+                         └─────────────────────────────────────────────┘
 
-   Application            ┌────────────────────────────────────────────┐
+   Application            ┌─────────────────────────────────────────────┐
    modem_send_raw() ────► │  Ax25WriteTxFrame() / Ax25TransmitBuffer()  │
-                         │   HDLC framing, bit stuffing, FCS append,   │
-                         │   optional FX.25 RS encode                  │
-                         └───────────────┬──────────────────────────────┘
+                          │  HDLC framing, bit stuffing, FCS append,    │
+                          │  optional FX.25 RS encode                   │
+                          └──────────────┬──────────────────────────────┘
                                          ▼  Ax25GetTxBit()
-                         ┌────────────────────────────────────────────┐
+                         ┌─────────────────────────────────────────────┐
                          │  MODEM_BAUDRATE_TIMER_HANDLER() (modem.c)   │
                          │   • DDS tone synthesis (512-entry sine LUT) │
                          │     or G3RUH NRZI baseband levels           │
-                         └───────────────┬──────────────────────────────┘
+                         └───────────────┬─────────────────────────────┘
                                          ▼  called from GPTimer ISR
-                         ┌────────────────────────────────────────────┐
+                         ┌─────────────────────────────────────────────┐
                          │  DAC one-shot write @ 38 400 Hz (core 1*)   │
                          │  (GPIO25*, PTT / LEDs as configured)        │
-                         └────────────────────────────────────────────┘
+                         └─────────────────────────────────────────────┘
 
   * default pin/core assignments — all configurable, see esp32idf_radioamateur_modem_config.h
 ```
