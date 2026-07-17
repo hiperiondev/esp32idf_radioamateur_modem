@@ -1,0 +1,10 @@
+idf_component_register(
+    SRCS
+        "app_main.c"
+        "afsk_diag.c"
+        "afsk_loopback_test.c"
+    INCLUDE_DIRS
+        "."
+    REQUIRES
+        esp32idf_radioamateur_modem
+)
